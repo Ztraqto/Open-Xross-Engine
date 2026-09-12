@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.ztraqto'
+version = '1.0.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'com.ztraqto.openxross:openxross-engine:1.4.1'
+
+    compileOnly 'net.dv8tion:JDA:6.5.0'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+}
+
+jar {
+    archiveBaseName.set('MyFirstPlugin')
+    archiveVersion.set(version)
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}

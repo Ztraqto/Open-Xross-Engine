@@ -1,0 +1,5 @@
+rootProject.name = 'OpenXrossEngine'
+
+// The public source ZIP must carry its credential exclusions. Preserve all other
+// Ant default excludes (including .git directories).
+org.apache.tools.ant.DirectoryScanner.removeDefaultExclude('**/.gitignore')

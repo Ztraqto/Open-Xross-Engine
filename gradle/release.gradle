@@ -1,0 +1,116 @@
+// Public source is an explicit allowlist. Runtime folders and arbitrary root files
+// never become release inputs, even when they are untracked or git-ignored.
+def releaseSources = fileTree(projectDir) {
+    include '*.md', 'LICENSE', 'NOTICE', '.gitignore'
+    include 'build.gradle', 'settings.gradle', 'gradle.lockfile'
+    include 'gradlew', 'gradlew.bat', 'release.bat', 'build-release.bat', 'package-release.bat'
+    include 'init-gradle-wrapper.bat', 'init-gradle-wrapper.sh', 'init-gradle-wrapper.ps1'
+    include 'xross.config.example.json'
+    include 'gradle/release.gradle', 'gradle/verification-metadata.xml'
+    include 'gradle/wrapper/gradle-wrapper.properties', 'gradle/wrapper/gradle-wrapper.jar'
+    include 'src/**/*.java', 'src/main/resources/xross-lang/*.json'
+    include 'docs/**/*.md'
+    include 'examples/**/README.md', 'examples/**/build.gradle', 'examples/**/settings.gradle'
+    include 'examples/**/src/**/*.java'
+    include 'examples/**/src/main/resources/plugin.json', 'examples/**/src/main/resources/system-plugin.json'
+    include 'examples/**/src/main/resources/plugin-lang/*.json'
+    include 'examples/multi-machine-cluster/*.example.json'
+    include 'system-plugins/README.md', 'system-plugins/trusted.sha256.example', 'system-plugins/.gitkeep'
+    exclude '**/.git/**', '**/.gradle/**', '**/build/**'
+    exclude 'data/**', 'logs/**', 'plugins/**'
+    exclude '**/.env*', '**/*.pem', '**/*.key', '**/*.p12', '**/*.pfx', '**/*.jks'
+    exclude '**/xross.config.json', '**/xross.config.local.json', '**/*.aits.config.json', '**/*.aits.settings.json'
+}
+
+
+// GitHub publication source is intentionally narrower than the internal/full
+// release source set. Historical audits, local verification notes and Codex
+// implementation notes are not required to build or use the OSS repository.
+def githubSources = fileTree(projectDir) {
+    include 'README.md', 'LICENSE', 'NOTICE', 'SECURITY.md', 'CONTRIBUTING.md'
+    include 'THIRD_PARTY_NOTICES.md', 'CHANGELOG_1.4.1.md', 'OPEN_SOURCE_READINESS.md', 'OPEN_SOURCE_AUDIT_1.4.1.md'
+    include 'PUBLISHING_MAVEN_CENTRAL.md', 'OPENXROSS_SYSTEM_PLUGIN_SHARD_SPEC.md'
+    include 'MULTI_MACHINE_SHARDING_1.4.1.md', 'ZTRAQTO_MIGRATION_1.2.2.md'
+    include '.gitignore', 'build.gradle', 'settings.gradle', 'gradle.lockfile'
+    include 'gradlew', 'gradlew.bat', 'release.bat', 'build-release.bat', 'package-release.bat'
+    include 'init-gradle-wrapper.bat', 'init-gradle-wrapper.sh', 'init-gradle-wrapper.ps1'
+    include 'xross.config.example.json'
+    include 'gradle/release.gradle', 'gradle/verification-metadata.xml'
+    include 'gradle/wrapper/gradle-wrapper.properties', 'gradle/wrapper/gradle-wrapper.jar'
+    include 'src/**/*.java', 'src/main/resources/**/*.json'
+    include 'examples/**/README.md', 'examples/**/build.gradle', 'examples/**/settings.gradle'
+    include 'examples/**/src/**/*.java', 'examples/**/src/main/resources/**/*.json'
+    include 'examples/multi-machine-cluster/*.example.json'
+    include 'system-plugins/README.md', 'system-plugins/trusted.sha256.example', 'system-plugins/.gitkeep'
+    exclude '**/.git/**', '**/.gradle/**', '**/build/**', 'data/**', 'logs/**', 'plugins/**'
+    exclude '**/.env*', '**/*.pem', '**/*.key', '**/*.p12', '**/*.pfx', '**/*.jks'
+    exclude '**/xross.config.json', '**/xross.config.local.json', '**/*.aits.config.json', '**/*.aits.settings.json'
+}
+
+tasks.register('verifyReleaseInputs') {
+    inputs.files(releaseSources)
+    doLast {
+        def root = projectDir.toPath().toRealPath()
+        releaseSources.each { source ->
+            def path = source.toPath()
+            if (!path.toRealPath().startsWith(root)) {
+                throw new GradleException("Release input resolves outside the project: ${source.name}")
+            }
+            def cursor = path
+            while (cursor != null && cursor != projectDir.toPath()) {
+                if (java.nio.file.Files.isSymbolicLink(cursor)) {
+                    throw new GradleException("Symbolic links are not release inputs: ${source.name}")
+                }
+                cursor = cursor.parent
+            }
+        }
+    }
+}
+
+tasks.register('sourceReleaseZip', Zip) {
+    dependsOn 'verifyReleaseInputs'
+    archiveFileName = "OpenXrossEngine-${project.version}-source.zip"
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+    from releaseSources
+}
+
+
+
+tasks.register('verifyGithubReleaseInputs') {
+    inputs.files(githubSources)
+    doLast {
+        def root = projectDir.toPath().toRealPath()
+        githubSources.each { source ->
+            def path = source.toPath()
+            if (!path.toRealPath().startsWith(root)) {
+                throw new GradleException("GitHub release input resolves outside the project: ${source.name}")
+            }
+            def cursor = path
+            while (cursor != null && cursor != projectDir.toPath()) {
+                if (java.nio.file.Files.isSymbolicLink(cursor)) {
+                    throw new GradleException("Symbolic links are not GitHub release inputs: ${source.name}")
+                }
+                cursor = cursor.parent
+            }
+        }
+    }
+}
+
+tasks.register('githubSourceZip', Zip) {
+    dependsOn 'verifyGithubReleaseInputs'
+    archiveFileName = "OpenXrossEngine-${project.version}-github-source.zip"
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+    from githubSources
+}
+
+tasks.register('stageRelease', Sync) {
+    dependsOn 'build', 'sourcesJar', 'javadocJar', 'sourceReleaseZip', 'githubSourceZip'
+    into layout.buildDirectory.dir('release')
+    from tasks.named('jar')
+    from tasks.named('sourcesJar')
+    from tasks.named('javadocJar')
+    from tasks.named('sourceReleaseZip')
+    from tasks.named('githubSourceZip')
+    from('LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md')
+    from("CHANGELOG_${project.version}.md")
+}

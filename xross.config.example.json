@@ -1,0 +1,63 @@
+{
+  "product": {
+    "name": "My OpenXross Bot",
+    "certificationProgramId": "my-bot-partner",
+    "privacyPolicyUpdatedAt": "2026-08-26"
+  },
+  "discord": {
+    "token": "REPLACE_WITH_DISCORD_BOT_TOKEN",
+    "administratorIds": []
+  },
+  "database": {
+    "backend": "local",
+    "localPath": "data/xross-local.json",
+    "postgresUrl": "jdbc:postgresql://localhost:5432/openxross",
+    "postgresUser": "openxross",
+    "postgresPassword": "REPLACE_WITH_DATABASE_PASSWORD",
+    "authToken": "REPLACE_WITH_PRIVATE_GATEWAY_TOKEN",
+    "allowInsecureExternalHttp": false,
+    "setup": {
+      "adminUrl": "jdbc:postgresql://localhost:5432/postgres",
+      "adminUser": "postgres",
+      "adminPassword": "REPLACE_WITH_POSTGRES_ADMIN_PASSWORD"
+    }
+  },
+  "editor": {
+    "url": "",
+    "signingSecret": "",
+    "attachmentTransport": false,
+    "attachmentChannelId": ""
+  },
+  "systemPlugins": {
+    "directory": "system-plugins",
+    "databaseProvider": "xrossdb",
+    "requireTrustedFingerprints": true,
+    "trustFile": "system-plugins/trusted.sha256"
+  },
+  "cluster": {
+    "mode": "off",
+    "clusterId": "my-bot-production",
+    "nodeId": "node-a",
+    "leaderEligible": true,
+    "maxShardsPerNode": 0,
+    "heartbeatSeconds": 10,
+    "nodeTimeoutSeconds": 45,
+    "coordinationLossTimeoutSeconds": 25,
+    "leaderLeaseSeconds": 30,
+    "reconcileSeconds": 10,
+    "formationDelaySeconds": 10,
+    "joinTimeoutSeconds": 180,
+    "transitionTimeoutSeconds": 180,
+    "startupLeaseSeconds": 180
+  },
+  "shards": {
+    "mode": "fixed",
+    "totalShards": 1,
+    "shardIds": [],
+    "readyTimeoutSeconds": 120,
+    "shutdownTimeoutSeconds": 5,
+    "autoScaleCheckSeconds": 300,
+    "autoScaleCooldownSeconds": 900,
+    "autoScaleMaxShards": 0
+  }
+}

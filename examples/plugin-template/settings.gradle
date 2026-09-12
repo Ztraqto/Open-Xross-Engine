@@ -1,0 +1,8 @@
+rootProject.name = 'OpenXrossPluginTemplate'
+
+includeBuild('../..') {
+    dependencySubstitution {
+        substitute module('com.ztraqto.openxross:openxross-engine') using project(':')
+    }
+}
+

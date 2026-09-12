@@ -1,0 +1,169 @@
+plugins {
+    id 'java-library'
+    id 'application'
+    id 'maven-publish'
+}
+
+group = 'com.ztraqto.openxross'
+version = '1.4.1'
+
+// 要件4.5: Java 17以上
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    // Public-source/Maven readiness: ship API source and JavaDoc alongside binaries.
+    withSourcesJar()
+    withJavadocJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // ==========================================
+    // 1. Core / Discord (JDA)
+    // ==========================================
+    // 要件2: JDA接続管理、イベント受信
+    // Slash Command等の最新機能に対応するため JDA 6.xを使用
+    api 'net.dv8tion:JDA:6.5.0'
+
+    // ==========================================
+    // 2. Data / Persistence
+    // ==========================================
+    // 要件2, 4.4: PostgreSQL/XrossDB persistence and Pause/Ban state
+    implementation 'org.postgresql:postgresql:42.7.13'
+
+    // Connection Pool (DB接続の安定化・高速化)
+    // Internal SystemでのSQL接続管理に使用
+    implementation 'com.zaxxer:HikariCP:7.1.0'
+
+    // ==========================================
+    // 3. JSON Processing / Configuration
+    // ==========================================
+    // Configuration, XrossDB protocol and structured engine data
+    api platform('com.fasterxml.jackson:jackson-bom:2.22.2')
+    api 'com.fasterxml.jackson.core:jackson-databind'
+
+    // ==========================================
+    // 4. Utility / Security
+    // ==========================================
+    // Lavaplayer/Apache HttpClient transitive graph uses Commons Codec.
+    // Keep a current explicit version instead of falling back to an older transitive release.
+    implementation 'commons-codec:commons-codec:1.22.1'
+
+    // プラグイン読み込み時のファイル操作用 (IOUtilsなど)
+    implementation 'commons-io:commons-io:2.22.0'
+
+    // ボイラープレートコード削減 (Getter/Setter/Builder)
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // ==========================================
+    // 5. Logging
+    // ==========================================
+    // JDAはSLF4Jを使用するため、実装としてLogbackを採用
+    implementation 'ch.qos.logback:logback-classic:1.6.3'
+
+    implementation 'dev.arbjerg:lavaplayer:2.2.7'
+
+    constraints {
+        // Lavaplayer historically resolved Rhino 1.7.14, which is affected by
+        // GHSA-3w8q-xq97-5j7x. Keep the patched transitive version explicit.
+        implementation('org.mozilla:rhino:1.7.14.1')
+        implementation('org.jsoup:jsoup:1.23.1') {
+            because 'Fix CVE-2026-71497 / GHSA-pmhh-3w7g-xqp8 in the Lavaplayer dependency graph.'
+        }
+    }
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+}
+
+application {
+    mainClass = 'com.ztraqto.openxross.launcher.OpenXrossLauncher'
+}
+
+// エンジン起動時のエンコーディング指定
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Javadoc).configureEach {
+    options.encoding = 'UTF-8'
+    options.charSet = 'UTF-8'
+    options.docEncoding = 'UTF-8'
+}
+
+dependencyLocking {
+    lockAllConfigurations()
+}
+
+test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifactId = 'openxross-engine'
+            pom {
+                name = 'OpenXrossEngine'
+                description = 'Extensible Java 17 Discord bot engine with plugins, system plugins, sharding and Xross Orchestrator multi-machine coordination.'
+                url = 'https://ztraqto.com'
+                licenses {
+                    license {
+                        name = 'Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'ztraqto'
+                        name = 'Ztraqto'
+                        organization = 'Ztraqto'
+                        organizationUrl = 'https://ztraqto.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/ztraqto/OpenXrossEngine.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/ztraqto/OpenXrossEngine.git'
+                    url = 'https://github.com/ztraqto/OpenXrossEngine'
+                }
+            }
+        }
+    }
+}
+
+
+
+tasks.named('jar') {
+    from(['LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md']) {
+        into 'META-INF'
+    }
+    manifest {
+        attributes(
+                'Implementation-Title': 'OpenXrossEngine',
+                'Implementation-Version': project.version
+        )
+    }
+}
+
+
+// Reproducible public-release archives.
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+distributions {
+    main {
+        contents {
+            from('LICENSE', 'NOTICE', 'THIRD_PARTY_NOTICES.md')
+        }
+    }
+}
+
+apply from: 'gradle/release.gradle'

@@ -1,0 +1,8 @@
+{
+  "id": "template-plugin",
+  "name": "TemplatePlugin",
+  "version": "1.0.0",
+  "main": "com.ztraqto.openxross.plugin.template.TemplatePlugin",
+  "description": "Template plugin for Xross Engine",
+  "authors": ["Developer Name"]
+}

@@ -1,0 +1,4 @@
+{
+  "cmd.hello.description": "Say hello to the world",
+  "cmd.hello.response": "{0}, {1}! Welcome to Xross Engine."
+}

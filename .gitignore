@@ -1,0 +1,35 @@
+.gradle/
+.idea/
+build/
+out/
+*.iml
+
+data/
+plugins/
+logs/
+xross.aits.config.json
+xecute.aits.config.json
+xecute.aits.settings.json
+*.db
+*.db-shm
+*.db-wal
+
+# Local credentials / deployment-only material
+key.xet
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+xross.config.local.json
+xross.config.json
+
+!.gitkeep
+
+system-plugins/*.jar
+# Fingerprint trust stores are deployment-specific. Publish an example instead.
+system-plugins/trusted.sha256
+release/
+*-source.zip

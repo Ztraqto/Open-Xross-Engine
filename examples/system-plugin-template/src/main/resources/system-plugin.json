@@ -1,0 +1,12 @@
+{
+  "id": "system-template",
+  "name": "System Plugin Template",
+  "version": "1.0.0",
+  "main": "com.ztraqto.openxross.systemplugin.template.TemplateSystemPlugin",
+  "description": "Example OpenXross privileged system plugin.",
+  "authors": [
+    "Ztraqto"
+  ],
+  "engineApi": "1",
+  "requires": []
+}

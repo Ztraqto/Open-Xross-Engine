@@ -1,0 +1,4 @@
+{
+  "cmd.hello.description": "世界に挨拶します",
+  "cmd.hello.response": "{0}、{1}さん！Xross Engineへようこそ。"
+}

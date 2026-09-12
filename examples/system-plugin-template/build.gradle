@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.ztraqto'
+version = '1.0.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'com.ztraqto.openxross:openxross-engine:1.4.1'
+}
+
+jar {
+    archiveBaseName.set('OpenXrossSystemPluginTemplate')
+    archiveVersion.set(version)
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
